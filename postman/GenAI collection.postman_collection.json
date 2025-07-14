@@ -1,0 +1,18 @@
+{
+	"info": {
+		"_postman_id": "d1e16d31-1a1c-4bc2-8c0f-06adc44fe463",
+		"name": "GenAI collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34420996"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
