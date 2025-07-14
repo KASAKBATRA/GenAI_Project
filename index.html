@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Research Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f7f1e8 0%, #e8dcc0 50%, #d4c5a9 100%);
+            min-height: 100vh;
+            color: #5d4e37;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="books" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="none"/><path d="M10 20h8v15h-8z" fill="%23d4af37" opacity="0.1"/><path d="M25 25h8v12h-8z" fill="%23cd853f" opacity="0.1"/><path d="M40 18h8v18h-8z" fill="%23daa520" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23books)"/></svg>') repeat;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: #8b4513;
+            margin-bottom: 30px;
+            position: relative;
+            padding: 20px;
+        }
+
+        .header::before {
+            content: '📚✨📖';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            opacity: 0.7;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+            background: linear-gradient(45deg, #8b4513, #a0522d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 20px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.8;
+            color: #654321;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #faf6f0 0%, #f5f0e8 100%);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(139, 69, 19, 0.1), 
+                        0 6px 20px rgba(160, 82, 45, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 30%, rgba(218, 165, 32, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(139, 69, 19, 0.15), 
+                        0 8px 25px rgba(160, 82, 45, 0.1);
+        }
+
+        .card h2 {
+            color: #8b4513;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .upload-section {
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #cd853f;
+            border-radius: 15px;
+            padding: 50px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #fff8f0 0%, #fef5e7 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 60px;
+            height: 60px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20 30h60v50H20z" fill="none" stroke="%23cd853f" stroke-width="2"/><path d="M30 20h40v10H30z" fill="%23daa520"/><path d="M25 40h50v5H25z" fill="%23f4a460" opacity="0.5"/><path d="M25 50h50v5H25z" fill="%23f4a460" opacity="0.5"/><path d="M25 60h50v5H25z" fill="%23f4a460" opacity="0.5"/></svg>') no-repeat center;
+            background-size: contain;
+            opacity: 0.3;
+        }
+
+        .upload-area:hover {
+            border-color: #daa520;
+            background: linear-gradient(145deg, #fffaf5 0%, #fef7ea 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-area.dragover {
+            border-color: #daa520;
+            background: linear-gradient(145deg, #fffbf5 0%, #fef8ed 100%);
+            transform: scale(1.05);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #cd853f;
+            margin-bottom: 20px;
+            filter: drop-shadow(2px 2px 4px rgba(205, 133, 63, 0.3));
+        }
+
+        .summary-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f9f5f0 0%, #f4ede2 100%);
+            border-radius: 12px;
+            display: none;
+            border: 2px solid rgba(218, 165, 32, 0.3);
+            position: relative;
+        }
+
+        .summary-section::before {
+            content: '📝';
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            font-size: 1.8em;
+            background: #f9f5f0;
+            padding: 5px 10px;
+            border-radius: 50%;
+        }
+
+        .summary-section h3 {
+            color: #8b4513;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .interaction-modes {
+            display: none;
+            grid-column: 1 / -1;
+        }
+
+        .mode-tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
+            background: linear-gradient(145deg, #f5f0e8 0%, #ede4d3 100%);
+        }
+
+        .mode-tab {
+            flex: 1;
+            padding: 18px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #8b4513;
+            position: relative;
+        }
+
+        .mode-tab::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(45deg, #cd853f, #daa520);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(145deg, #daa520 0%, #cd853f 100%);
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .mode-tab.active::before {
+            transform: scaleX(1);
+        }
+
+        .mode-content {
+            display: none;
+            background: linear-gradient(145deg, #faf6f0 0%, #f5f0e8 100%);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(139, 69, 19, 0.1);
+            position: relative;
+            border: 2px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .mode-content.active {
+            display: block;
+        }
+
+        .mode-content::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="30" r="15" fill="%23daa520" opacity="0.3"/><path d="M35 50h30v5H35z" fill="%23cd853f" opacity="0.4"/><path d="M35 60h30v5H35z" fill="%23cd853f" opacity="0.4"/><path d="M35 70h20v5H35z" fill="%23cd853f" opacity="0.4"/></svg>') no-repeat center;
+            background-size: contain;
+            opacity: 0.6;
+        }
+
+        .question-input {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid #e6d7c3;
+            border-radius: 12px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            resize: vertical;
+            min-height: 120px;
+            background: linear-gradient(145deg, #fffaf5 0%, #fef7ea 100%);
+            color: #5d4e37;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .question-input:focus {
+            outline: none;
+            border-color: #cd853f;
+            box-shadow: 0 0 0 3px rgba(205, 133, 63, 0.1);
+            background: linear-gradient(145deg, #fffbf5 0%, #fef8ed 100%);
+        }
+
+        .question-input::placeholder {
+            color: #a0916f;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #cd853f 0%, #daa520 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(205, 133, 63, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(205, 133, 63, 0.4);
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: 0 4px 15px rgba(205, 133, 63, 0.3);
+        }
+
+        .answer-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .challenge-questions {
+            margin-bottom: 20px;
+        }
+
+        .challenge-question {
+            background: #e9ecef;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #764ba2;
+        }
+
+        .user-answer {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+            min-height: 80px;
+        }
+
+        .feedback-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-info {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .mode-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Smart Research Assistant</h1>
+            <p>Upload documents and get intelligent question-answering capabilities</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>📄 Document Upload</h2>
+                <div class="upload-section">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📁</div>
+                        <h3>Drop your PDF or TXT file here</h3>
+                        <p>or click to browse</p>
+                        <input type="file" id="fileInput" accept=".pdf,.txt" style="display: none;">
+                    </div>
+                    <div class="file-info" id="fileInfo"></div>
+                    <div class="loading" id="uploadLoading">
+                        <div class="spinner"></div>
+                        <p>Processing document...</p>
+                    </div>
+                </div>
+                <div class="summary-section" id="summarySection">
+                    <h3>📋 Document Summary</h3>
+                    <div id="documentSummary"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>💡 Quick Tips</h2>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin-bottom: 10px;">🔍 <strong>Ask Anything Mode:</strong> Ask free-form questions about your document</li>
+                    <li style="margin-bottom: 10px;">🎯 <strong>Challenge Mode:</strong> Test your understanding with AI-generated questions</li>
+                    <li style="margin-bottom: 10px;">📚 All answers are grounded in your uploaded content</li>
+                    <li style="margin-bottom: 10px;">✅ Every response includes justification from the document</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card interaction-modes" id="interactionModes">
+            <div class="mode-tabs">
+                <button class="mode-tab active" data-mode="ask">🤔 Ask Anything</button>
+                <button class="mode-tab" data-mode="challenge">🎯 Challenge Me</button>
+            </div>
+
+            <div class="mode-content active" id="askMode">
+                <h3>Ask questions about your document</h3>
+                <textarea class="question-input" id="userQuestion" placeholder="What would you like to know about this document?"></textarea>
+                <button class="btn" id="askBtn">Ask Question</button>
+                <div class="loading" id="askLoading">
+                    <div class="spinner"></div>
+                    <p>Analyzing document...</p>
+                </div>
+                <div class="answer-section" id="answerSection" style="display: none;">
+                    <h4>Answer:</h4>
+                    <div id="answer"></div>
+                    <h4 style="margin-top: 15px;">Justification:</h4>
+                    <div id="justification"></div>
+                </div>
+            </div>
+
+            <div class="mode-content" id="challengeMode">
+                <h3>Test your understanding</h3>
+                <button class="btn" id="generateChallengeBtn">Generate Challenge Questions</button>
+                <div class="loading" id="challengeLoading">
+                    <div class="spinner"></div>
+                    <p>Generating questions...</p>
+                </div>
+                <div class="challenge-questions" id="challengeQuestions"></div>
+                <button class="btn" id="submitAnswersBtn" style="display: none;">Submit Answers</button>
+                <div class="feedback-section" id="feedbackSection" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadedDocument = null;
+        let challengeQuestionsData = [];
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadLoading = document.getElementById('uploadLoading');
+        const summarySection = document.getElementById('summarySection');
+        const documentSummary = document.getElementById('documentSummary');
+        const interactionModes = document.getElementById('interactionModes');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        async function handleFileUpload(file) {
+            if (!file.name.match(/\.(pdf|txt)$/i)) {
+                showError('Please upload a PDF or TXT file.');
+                return;
+            }
+
+            fileInfo.innerHTML = `<strong>File:</strong> ${file.name} (${formatFileSize(file.size)})`;
+            fileInfo.style.display = 'block';
+            uploadLoading.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                uploadLoading.style.display = 'none';
+
+                if (result.success) {
+                    uploadedDocument = result.document_id;
+                    documentSummary.innerHTML = result.summary;
+                    summarySection.style.display = 'block';
+                    interactionModes.style.display = 'block';
+                } else {
+                    showError(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                uploadLoading.style.display = 'none';
+                showError('Network error. Please try again.');
+            }
+        }
+
+        // Mode switching
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const mode = tab.getAttribute('data-mode');
+                
+                // Update tabs
+                document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.mode-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(mode + 'Mode').classList.add('active');
+            });
+        });
+
+        // Ask Anything mode
+        const askBtn = document.getElementById('askBtn');
+        const userQuestion = document.getElementById('userQuestion');
+        const askLoading = document.getElementById('askLoading');
+        const answerSection = document.getElementById('answerSection');
+        const answer = document.getElementById('answer');
+        const justification = document.getElementById('justification');
+
+        askBtn.addEventListener('click', async () => {
+            if (!uploadedDocument) {
+                showError('Please upload a document first.');
+                return;
+            }
+
+            const question = userQuestion.value.trim();
+            if (!question) {
+                showError('Please enter a question.');
+                return;
+            }
+
+            askLoading.style.display = 'block';
+            answerSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        document_id: uploadedDocument,
+                        question: question
+                    })
+                });
+
+                const result = await response.json();
+                askLoading.style.display = 'none';
+
+                if (result.success) {
+                    answer.innerHTML = result.answer;
+                    justification.innerHTML = result.justification;
+                    answerSection.style.display = 'block';
+                } else {
+                    showError(result.error || 'Failed to get answer');
+                }
+            } catch (error) {
+                askLoading.style.display = 'none';
+                showError('Network error. Please try again.');
+            }
+        });
+
+        // Challenge mode
+        const generateChallengeBtn = document.getElementById('generateChallengeBtn');
+        const challengeLoading = document.getElementById('challengeLoading');
+        const challengeQuestions = document.getElementById('challengeQuestions');
+        const submitAnswersBtn = document.getElementById('submitAnswersBtn');
+        const feedbackSection = document.getElementById('feedbackSection');
+
+        generateChallengeBtn.addEventListener('click', async () => {
+            if (!uploadedDocument) {
+                showError('Please upload a document first.');
+                return;
+            }
+
+            challengeLoading.style.display = 'block';
+            challengeQuestions.innerHTML = '';
+            submitAnswersBtn.style.display = 'none';
+            feedbackSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/challenge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        document_id: uploadedDocument
+                    })
+                });
+
+                const result = await response.json();
+                challengeLoading.style.display = 'none';
+
+                if (result.success) {
+                    challengeQuestionsData = result.questions;
+                    displayChallengeQuestions(result.questions);
+                    submitAnswersBtn.style.display = 'block';
+                } else {
+                    showError(result.error || 'Failed to generate questions');
+                }
+            } catch (error) {
+                challengeLoading.style.display = 'none';
+                showError('Network error. Please try again.');
+            }
+        });
+
+        submitAnswersBtn.addEventListener('click', async () => {
+            const answers = [];
+            challengeQuestionsData.forEach((_, index) => {
+                const answerTextarea = document.getElementById(`answer_${index}`);
+                answers.push(answerTextarea.value.trim());
+            });
+
+            if (answers.some(a => !a)) {
+                showError('Please answer all questions.');
+                return;
+            }
+
+            challengeLoading.style.display = 'block';
+            feedbackSection.style.display = 'none';
+
+            try {
+                const response = await fetch('/evaluate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        document_id: uploadedDocument,
+                        questions: challengeQuestionsData,
+                        answers: answers
+                    })
+                });
+
+                const result = await response.json();
+                challengeLoading.style.display = 'none';
+
+                if (result.success) {
+                    displayFeedback(result.feedback);
+                    feedbackSection.style.display = 'block';
+                } else {
+                    showError(result.error || 'Failed to evaluate answers');
+                }
+            } catch (error) {
+                challengeLoading.style.display = 'none';
+                showError('Network error. Please try again.');
+            }
+        });
+
+        function displayChallengeQuestions(questions) {
+            challengeQuestions.innerHTML = questions.map((q, index) => `
+                <div class="challenge-question">
+                    <strong>Question ${index + 1}:</strong> ${q}
+                    <textarea class="user-answer" id="answer_${index}" placeholder="Your answer..."></textarea>
+                </div>
+            `).join('');
+        }
+
+        function displayFeedback(feedback) {
+            feedbackSection.innerHTML = feedback.map((f, index) => `
+                <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 5px;">
+                    <strong>Question ${index + 1}:</strong><br>
+                    <strong>Your Answer:</strong> ${f.user_answer}<br>
+                    <strong>Feedback:</strong> ${f.feedback}<br>
+                    <strong>Justification:</strong> ${f.justification}
+                </div>
+            `).join('');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.container').appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        // Enter key support for question input
+        userQuestion.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                askBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
